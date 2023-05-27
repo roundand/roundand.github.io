@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.17/dist/tailwind.min.css" rel="stylesheet"/>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #fdf6e3;
+            color: #002b36;
+        }
+    </style>
+<title>Copenhagen Burnout Inventory</title>
+<script data-domain="a.picoapps.xyz" defer="" src="https://plausible.io/js/script.outbound-links.js"></script></head>
+<body class="m-3">
+<header class="text-center text-2xl font-bold mb-5">Copenhagen Burnout Inventory</header>
+<form class="space-y-4" id="questionnaireForm">
+<div class="grid sm:grid-cols-2 gap-4">
+<template id="statementTemplate">
+<div>
+<label class="block mb-1" data-group="{group}">{statement}:</label>
+<div class="space-y-2 flex flex-col">
+<div>
+<input "="" id="{name}_1" name="{name}_agree" required="" type="radio" value="100"/>
+<label for="{name}_1">Always</label>
+</div>
+<div>
+<input id="{name}_2" name="{name}_agree" type="radio" value="75"/>
+<label for="{name}_2">Often</label>
+</div>
+<div>
+<input id="{name}_3" name="{name}_agree" type="radio" value="50"/>
+<label for="{name}_3">Sometimes</label>
+</div>
+<div>
+<input id="{name}_4" name="{name}_agree" type="radio" value="25"/>
+<label for="{name}_4">Seldom</label>
+</div>
+<div>
+<input id="{name}_5" name="{name}_agree" type="radio" value="0"/>
+<label for="{name}_5">Never/almost never</label>
+</div>
+</div>
+</div>
+</template>
+</div>
+<button class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded" type="submit">Show my Burnout Level 🚀</button>
+</form>
+<p class="my-3 text-center hidden" id="loading">Loading...</p>
+<div class="border-t border-gray-200 mt-5" id="output"></div>
+<footer class="text-center mt-8">
+<a class="text-blue-500 houtrans" href="#">*</a>
+</footer>
+<script>
+  
+        function shuffle(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+        }
+        
+        var statements = [
+            { group: "p", text: "How often do you feel tired?" },
+            { group: "p", text: "How often are you physically exhausted?" },
+            { group: "p", text: "How often are you emotionally exhausted?" },
+            { group: "p", text: "How often do you think: 'I can’t take it anymore'?" },
+            { group: "p", text: "How often do you feel worn out?" },
+            { group: "p", text: "How often do you feel weak and susceptible to illness?" },
+            { group: "w", text: "Is your work emotionally exhausting?" },
+            { group: "w", text: "Do you feel burnt out because of your work?" },
+            { group: "w", text: "Does your work frustrate you?" },
+            { group: "w", text: "Do you feel worn out at the end of the working day?" },
+            { group: "w", text: "Are you exhausted in the morning at the thought of another day at work?" },
+            { group: "w", text: "Do you feel that every working hour is tiring for you?" },
+            { group: "w", text: "Do you have enough energy for family and friends during leisure time?" },
+            { group: "c", text: "Do you find it hard to work with clients?" },
+            { group: "c", text: "Do you find it frustrating to work with clients?" },
+            { group: "c", text: "Does it drain your energy to work with clients?" },
+            { group: "c", text: "Do you feel that you give more than you get back when you work with clients?" },
+            { group: "c", text: "Are you tired of working with clients?" },
+            { group: "c", text: "Do you sometimes wonder how long you will be able to continue working with clients?" }
+        ];
+        shuffle(statements);
+        const statementTemplate = document.getElementById('statementTemplate');
+        const statementsContainer = document.querySelector('#questionnaireForm > .grid');
+
+        statements.forEach((statement, index) => {
+            const newStatement = statementTemplate.content.cloneNode(true);
+            newStatement.querySelector('label').innerText = `${statement.text}:`;
+            newStatement.querySelector('label').dataset.group = `${statement.group}`;
+            newStatement.querySelectorAll('input').forEach(input => {
+                input.name = `statement_${index + 1}_agree`;
+                input.id = `statement_${index + 1}_agree_${input.value}`;
+                input.nextElementSibling.htmlFor = input.id;
+            });
+            statementsContainer.appendChild(newStatement);
+        });
+
+        const form = document.getElementById('questionnaireForm');
+        const loading = document.getElementById('loading');
+        const output = document.getElementById('output');
+
+        function getCategory(average) {
+            if (average < 50) {
+                return "Healthy";
+            } else if (average >= 50 && average < 75) {
+                return "Moderate";
+            } else if (average >= 75 && average < 100) {
+                return "High";
+            } else {
+                return "Severe";
+            }
+        }
+
+        function getColor(average) {
+            if (average < 50) {
+                return "bg-green-500";
+            } else if (average >= 50 && average < 75) {
+                return "bg-yellow-500";
+            } else if (average >= 75 && average < 100) {
+                return "bg-orange-500";
+            } else {
+                return "bg-red-500";
+            }
+        }
+
+        function getContrastColor(average) {
+            return average < 75 ? "black" : "blue";
+        }
+        
+        function getAverageResponses(target, group) {
+            const agreementLevels = Array.from(target.querySelectorAll(`label[data-group=${group}] ~ div input[type="radio"]:checked`)).map(input => parseInt(input.value));
+            return agreementLevels.reduce((a, b) => a + b, 0) / agreementLevels.length;
+        }
+
+        function getOutput(e, group, groupName) {
+            const average = getAverageResponses(e.target, group);
+            const category = getCategory(average);
+            const color = getColor(average);
+            const contrastColor = getContrastColor(average);
+            return `Your ${groupName} burnout level is <strong>${average.toFixed(2)}</strong>, which falls into the <span class="font-bold py-1 px-2 rounded ${color}" style="color:${contrastColor};" >${category}</span> category.`;
+        }
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            output.innerHTML = "<p>" + getOutput(e, "w", "Work") + "</p>";
+            output.innerHTML += "<p>" + getOutput(e, "p", "Personal") + "</p>";
+            output.innerHTML += "<p>" + getOutput(e, "c", "Client") + "</p>";
+        });
+    </script>
+
+<a href="https://picoapps.xyz/?ref=Badge" rel="noopener noreferrer" style="position: fixed; bottom: 5px; right: 0px; z-index: 9999;" target="_blank">
+<img alt="Pico Badge" src="https://picoapps.xyz/pico-badge.png" style="width: 150px;"/>
+</a>
+</body>
+</html>
