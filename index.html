@@ -26,8 +26,7 @@
     <form class="space-y-4" id="questionnaireForm">
         <div class="grid sm:grid-cols-2 gap-4" id="statementContainer">
         </div>
-        <button class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded" type="submit">Show my
-            Burnout Level 🚀</button>
+        <button class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded" type="submit">Show my Burnout Level 🚀</button>
     </form>
     <p class="my-3 text-center hidden" id="loading">Loading...</p>
     <div class="border-t border-gray-200 mt-5" id="output"></div>
@@ -70,10 +69,9 @@
         shuffle(statements);
         const statementsContainer = document.querySelector('#statementContainer');
 
-        // try the non-template approach
+        // create a single question in its own div
         function createQuestion(question, index) {
-            let questionDiv = document.createElement('div'); // no class
-
+            let questionDiv = document.createElement('div'); 
             let questionLabel = document.createElement('label');
             questionLabel.innerHTML = question.text;
             questionLabel.dataset.group = `${question.group}`;
@@ -114,6 +112,7 @@
         const loading = document.getElementById('loading');
         const output = document.getElementById('output');
 
+        // cut-offs as commonly listed, eg https://bmcpregnancychildbirth.biomedcentral.com/articles/10.1186/s12884-016-1212-5/tables/1 and https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9939042
         function getCategory(average) {
             if (average < 50) {
                 return "Healthy";
@@ -157,9 +156,9 @@
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            output.innerHTML = "<p>" + getOutput(e, "w", "Work") + "</p>";
-            output.innerHTML += "<p>" + getOutput(e, "p", "Personal") + "</p>";
-            output.innerHTML += "<p>" + getOutput(e, "c", "Client") + "</p>";
+            output.innerHTML = "<p>" + getOutput(e, "p", "Personal") + " This applies to your overall level of burnout.</p>";
+            output.innerHTML += "<p>" + getOutput(e, "w", "Work") + " This applies to your work environment.</p>";
+            output.innerHTML += "<p>" + getOutput(e, "c", "Client") + " This applies to your relationship with clients, patients, students or the equivalent</p>";
         });
     </script>
 
