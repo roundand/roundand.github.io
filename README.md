@@ -1,2 +1,2 @@
 # roundand.github.io
-[copenhagenBurnoutInventory.html|Copenhagen Burnout Inventory]
+[[copenhagenBurnoutInventory.html|Copenhagen Burnout Inventory]]
